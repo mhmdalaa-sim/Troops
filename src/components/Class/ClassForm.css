@@ -1,0 +1,8 @@
+.class-form {
+  padding: 1.5rem;
+}
+
+.class-form textarea {
+  resize: vertical;
+  min-height: 100px;
+}

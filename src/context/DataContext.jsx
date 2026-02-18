@@ -1,0 +1,216 @@
+import { createContext, useContext, useState, useEffect } from 'react';
+
+const DataContext = createContext();
+
+export const useData = () => {
+  const context = useContext(DataContext);
+  if (!context) {
+    throw new Error('useData must be used within a DataProvider');
+  }
+  return context;
+};
+
+// Initial mock data
+const initialCustomers = [
+  {
+    id: 1,
+    name: 'John Smith',
+    phone: '555-0101',
+    email: 'john@example.com',
+    membershipType: 'Monthly Premium',
+    subscriptionFee: 150,
+    startDate: '2024-01-15',
+    endDate: '2025-01-15',
+    remainingSessions: 12, // Global sessions (deprecated - kept for backward compatibility)
+    status: 'active',
+    enrolledClasses: [1, 2],
+    classSessions: {
+      1: 12, // BJJ - 12 sessions
+      2: 8   // Muay Thai - 8 sessions
+    },
+    attendanceLog: [],
+    freezePeriods: []
+  },
+  {
+    id: 2,
+    name: 'Sarah Johnson',
+    phone: '555-0102',
+    email: 'sarah@example.com',
+    membershipType: '3-Month Basic',
+    subscriptionFee: 300,
+    startDate: '2024-11-01',
+    endDate: '2025-02-01',
+    remainingSessions: 24,
+    status: 'active',
+    enrolledClasses: [1],
+    classSessions: {
+      1: 24 // BJJ - 24 sessions
+    },
+    attendanceLog: [],
+    freezePeriods: []
+  }
+];
+
+const initialClasses = [
+  {
+    id: 1,
+    name: 'Brazilian Jiu-Jitsu',
+    instructor: 'Master Carlos',
+    schedule: 'Mon, Wed, Fri - 6:00 PM',
+    capacity: 20,
+    enrolledCount: 15,
+    description: 'Ground fighting and grappling techniques',
+    sessionsPerVisit: 1,
+    monthlyFee: 120,
+    dropInFee: 25
+  },
+  {
+    id: 2,
+    name: 'Muay Thai',
+    instructor: 'Kru Somchai',
+    schedule: 'Tue, Thu - 7:00 PM',
+    capacity: 15,
+    enrolledCount: 12,
+    description: 'The art of eight limbs - striking martial art',
+    sessionsPerVisit: 1,
+    monthlyFee: 100,
+    dropInFee: 20
+  },
+  {
+    id: 3,
+    name: 'Kids Karate',
+    instructor: 'Sensei Mike',
+    schedule: 'Sat - 10:00 AM',
+    capacity: 25,
+    enrolledCount: 18,
+    description: 'Traditional karate for children ages 6-12',
+    sessionsPerVisit: 1,
+    monthlyFee: 80,
+    dropInFee: 15
+  }
+];
+
+export const DataProvider = ({ children }) => {
+  const [customers, setCustomers] = useState(() => {
+    const saved = localStorage.getItem('customers');
+    return saved ? JSON.parse(saved) : initialCustomers;
+  });
+
+  const [classes, setClasses] = useState(() => {
+    const saved = localStorage.getItem('classes');
+    return saved ? JSON.parse(saved) : initialClasses;
+  });
+
+  const [attendanceRecords, setAttendanceRecords] = useState(() => {
+    const saved = localStorage.getItem('attendanceRecords');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  // Persist to localStorage
+  useEffect(() => {
+    localStorage.setItem('customers', JSON.stringify(customers));
+  }, [customers]);
+
+  useEffect(() => {
+    localStorage.setItem('classes', JSON.stringify(classes));
+  }, [classes]);
+
+  useEffect(() => {
+    localStorage.setItem('attendanceRecords', JSON.stringify(attendanceRecords));
+  }, [attendanceRecords]);
+
+  // Customer operations
+  const addCustomer = (customer) => {
+    const newCustomer = {
+      ...customer,
+      id: Date.now(),
+      attendanceLog: [],
+      freezePeriods: [],
+      status: 'active'
+    };
+    setCustomers([...customers, newCustomer]);
+    return newCustomer;
+  };
+
+  const updateCustomer = (id, updates) => {
+    setCustomers(customers.map(c => c.id === id ? { ...c, ...updates } : c));
+  };
+
+  const deleteCustomer = (id) => {
+    setCustomers(customers.filter(c => c.id !== id));
+  };
+
+  const getCustomer = (id) => {
+    return customers.find(c => c.id === id);
+  };
+
+  // Class operations
+  const addClass = (classData) => {
+    const newClass = {
+      ...classData,
+      id: Date.now(),
+      enrolledCount: 0
+    };
+    setClasses([...classes, newClass]);
+    return newClass;
+  };
+
+  const updateClass = (id, updates) => {
+    setClasses(classes.map(c => c.id === id ? { ...c, ...updates } : c));
+  };
+
+  const deleteClass = (id) => {
+    setClasses(classes.filter(c => c.id !== id));
+  };
+
+  const getClass = (id) => {
+    return classes.find(c => c.id === id);
+  };
+
+  // Attendance operations
+  const recordAttendance = (customerId, classId) => {
+    const record = {
+      id: Date.now(),
+      customerId,
+      classId,
+      timestamp: new Date().toISOString()
+    };
+    setAttendanceRecords([...attendanceRecords, record]);
+    
+    // Get sessions to deduct based on class
+    const selectedClass = getClass(classId);
+    const sessionsToDeduct = selectedClass?.sessionsPerVisit || 1;
+    
+    // Update customer's attendance log and decrement sessions for that specific class
+    const customer = getCustomer(customerId);
+    const updatedClassSessions = { ...(customer?.classSessions || {}) };
+    
+    if (updatedClassSessions[classId] !== undefined) {
+      updatedClassSessions[classId] = Math.max(0, updatedClassSessions[classId] - sessionsToDeduct);
+    }
+    
+    updateCustomer(customerId, {
+      attendanceLog: [...(customer?.attendanceLog || []), record],
+      classSessions: updatedClassSessions
+    });
+    
+    return record;
+  };
+
+  const value = {
+    customers,
+    classes,
+    attendanceRecords,
+    addCustomer,
+    updateCustomer,
+    deleteCustomer,
+    getCustomer,
+    addClass,
+    updateClass,
+    deleteClass,
+    getClass,
+    recordAttendance
+  };
+
+  return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
+};

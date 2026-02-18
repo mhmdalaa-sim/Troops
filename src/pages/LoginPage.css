@@ -1,0 +1,115 @@
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: linear-gradient(135deg, var(--color-bg) 0%, var(--color-secondary) 50%, var(--color-primary-dark) 100%);
+}
+
+.login-container {
+  max-width: 600px;
+  width: 100%;
+  background: var(--color-bg-card);
+  border: 2px solid var(--color-primary);
+  border-radius: 16px;
+  padding: 3rem;
+  box-shadow: 0 20px 60px rgba(139, 0, 0, 0.5);
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.login-header h1 {
+  font-size: 4rem;
+  margin: 0;
+}
+
+.login-header h2 {
+  font-size: 2rem;
+  margin: 0.5rem 0 0 0;
+  color: var(--color-accent);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.login-header p {
+  color: var(--color-text-secondary);
+  margin: 0.5rem 0 0 0;
+  font-size: 1.1rem;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.role-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.role-option {
+  cursor: pointer;
+}
+
+.role-option input[type="radio"] {
+  display: none;
+}
+
+.role-card {
+  background: var(--color-bg);
+  border: 2px solid var(--color-border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.role-option:hover .role-card {
+  border-color: var(--color-primary);
+  transform: translateY(-4px);
+}
+
+.role-option.active .role-card {
+  border-color: var(--color-accent);
+  background: linear-gradient(135deg, rgba(139, 0, 0, 0.2) 0%, rgba(220, 20, 60, 0.1) 100%);
+  box-shadow: 0 8px 24px rgba(139, 0, 0, 0.3);
+}
+
+.role-icon {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+}
+
+.role-title {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--color-text);
+  margin-bottom: 0.25rem;
+}
+
+.role-desc {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+.login-btn {
+  margin-top: 1rem;
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+}
+
+@media (max-width: 600px) {
+  .login-container {
+    padding: 2rem;
+  }
+  
+  .role-options {
+    grid-template-columns: 1fr;
+  }
+}

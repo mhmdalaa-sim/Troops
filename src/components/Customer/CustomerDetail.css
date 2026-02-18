@@ -1,0 +1,233 @@
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modal-content {
+  background: var(--color-bg-secondary);
+  border: 2px solid var(--color-primary);
+  border-radius: 12px;
+  max-width: 700px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(139, 0, 0, 0.5);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 2px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  background: var(--color-bg-secondary);
+  z-index: 10;
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: var(--color-accent);
+}
+
+.close-btn {
+  background: transparent;
+  color: var(--color-text);
+  font-size: 1.5rem;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.close-btn:hover {
+  background: var(--color-danger);
+  color: white;
+}
+
+.message {
+  margin: 1rem 1.5rem;
+  padding: 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.message.success {
+  background: rgba(72, 187, 120, 0.2);
+  border: 1px solid var(--color-success);
+  color: var(--color-success);
+}
+
+.message.error {
+  background: rgba(245, 101, 101, 0.2);
+  border: 1px solid var(--color-danger);
+  color: var(--color-danger);
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.detail-section {
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.detail-section:last-child {
+  border-bottom: none;
+}
+
+.detail-section h3 {
+  color: var(--color-primary-light);
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.detail-section p {
+  margin: 0.5rem 0;
+  color: var(--color-text);
+}
+
+.detail-section strong {
+  color: var(--color-text-secondary);
+  margin-right: 0.5rem;
+}
+
+.class-list {
+  list-style: none;
+  padding: 0;
+}
+
+.class-list li {
+  padding: 0.75rem;
+  background: var(--color-bg-card);
+  border-left: 3px solid var(--color-primary);
+  margin-bottom: 0.5rem;
+  border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.class-name {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.class-sessions {
+  background: var(--color-steel);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.empty-state {
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+.attendance-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.attendance-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem;
+  background: var(--color-bg-card);
+  border-radius: 4px;
+}
+
+.freeze-record {
+  background: var(--color-bg-card);
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+  border-left: 3px solid var(--color-steel);
+}
+
+.freeze-reason {
+  color: var(--color-text-secondary);
+  font-style: italic;
+  margin-top: 0.5rem;
+}
+
+.modal-actions {
+  padding: 1.5rem;
+  border-top: 2px solid var(--color-border);
+  display: flex;
+  gap: 1rem;
+  position: sticky;
+  bottom: 0;
+  background: var(--color-bg-secondary);
+}
+
+.modal-actions button {
+  flex: 1;
+}
+
+.freeze-form {
+  padding: 1.5rem;
+  background: var(--color-bg-card);
+  margin: 0 1.5rem 1.5rem 1.5rem;
+  border-radius: 8px;
+  border: 2px solid var(--color-steel);
+}
+
+.freeze-form h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: var(--color-steel-light);
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+
+.freeze-form button {
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.fee-highlight-detail {
+  background: rgba(72, 187, 120, 0.1);
+  padding: 1rem;
+  margin: 0.75rem 0;
+  border-radius: 8px;
+  border-left: 4px solid var(--color-success);
+}
+
+.fee-amount-large {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-success);
+  margin-left: 1rem;
+}
