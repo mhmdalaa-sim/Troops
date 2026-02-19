@@ -34,36 +34,52 @@ export const useClockIn = () => {
       return { success: false, error: 'Class not found' };
     }
 
-    // Check if customer is enrolled in this class
-    if (!customer.enrolledClasses || !customer.enrolledClasses.includes(classId)) {
-      return { 
-        success: false, 
-        error: `Customer is not enrolled in ${selectedClass.name}. Please enroll them first.` 
-      };
-    }
-
-    // Get sessions for this specific class
+    // Get sessions from class-specific or general drop-in balance
     const classSessions = customer.classSessions || {};
-    const availableSessions = classSessions[classId] || 0;
+    const enrolledInClass = customer.enrolledClasses?.includes(classId);
+    const sessionsForClass = classSessions[classId] || 0;
+    const dropInSessions = customer.dropInSessions || 0;
     const sessionsToDeduct = selectedClass.sessionsPerVisit || 1;
 
-    // Check if customer has enough sessions for this class
-    if (availableSessions < sessionsToDeduct) {
-      return { 
-        success: false, 
-        error: `Not enough sessions for ${selectedClass.name}. Need ${sessionsToDeduct} but only ${availableSessions} remaining.` 
+    // Decide which balance to use:
+    // 1) If enrolled and has enough class sessions -> use class balance
+    // 2) Otherwise, if drop-in has enough -> use drop-in balance
+    let source = null;
+    if (enrolledInClass && sessionsForClass >= sessionsToDeduct) {
+      source = 'class';
+    } else if (dropInSessions >= sessionsToDeduct) {
+      source = 'dropin';
+    }
+
+    if (!source) {
+      return {
+        success: false,
+        error: `Not enough sessions for ${selectedClass.name}. Need ${sessionsToDeduct}, but class and drop-in balances are too low.`
       };
     }
 
     // Record attendance
     const record = recordAttendance(customerId, classId);
-    const newSessionCount = availableSessions - sessionsToDeduct;
+
+    if (source === 'class') {
+      const newSessionCount = sessionsForClass - sessionsToDeduct;
+      return {
+        success: true,
+        record,
+        remainingSessions: newSessionCount,
+        message: `Welcome ${customer.name} to ${selectedClass.name}! ${newSessionCount} sessions remaining for this class.`
+      };
+    }
+
+    // Use drop-in sessions
+    const newDropInCount = dropInSessions - sessionsToDeduct;
+    updateCustomer(customerId, { dropInSessions: newDropInCount });
 
     return {
       success: true,
       record,
-      remainingSessions: newSessionCount,
-      message: `Welcome ${customer.name} to ${selectedClass.name}! ${newSessionCount} sessions remaining for this class.`
+      remainingSessions: newDropInCount,
+      message: `Welcome ${customer.name} to ${selectedClass.name}! ${newDropInCount} drop-in sessions remaining.`
     };
   }, [getCustomer, recordAttendance, updateCustomer, getClass]);
 

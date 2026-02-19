@@ -16,6 +16,7 @@ const initialCustomers = [
     id: 1,
     name: 'John Smith',
     phone: '555-0101',
+    photoUrl: '',
     email: 'john@example.com',
     membershipType: 'Monthly Premium',
     subscriptionFee: 150,
@@ -29,12 +30,14 @@ const initialCustomers = [
       2: 8   // Muay Thai - 8 sessions
     },
     attendanceLog: [],
-    freezePeriods: []
+    freezePeriods: [],
+    dropInSessions: 0
   },
   {
     id: 2,
     name: 'Sarah Johnson',
     phone: '555-0102',
+    photoUrl: '',
     email: 'sarah@example.com',
     membershipType: '3-Month Basic',
     subscriptionFee: 300,
@@ -47,7 +50,8 @@ const initialCustomers = [
       1: 24 // BJJ - 24 sessions
     },
     attendanceLog: [],
-    freezePeriods: []
+    freezePeriods: [],
+    dropInSessions: 0
   }
 ];
 
@@ -126,7 +130,8 @@ export const DataProvider = ({ children }) => {
       id: Date.now(),
       attendanceLog: [],
       freezePeriods: [],
-      status: 'active'
+      status: 'active',
+      dropInSessions: 0
     };
     setCustomers([...customers, newCustomer]);
     return newCustomer;
@@ -165,6 +170,56 @@ export const DataProvider = ({ children }) => {
 
   const getClass = (id) => {
     return classes.find(c => c.id === id);
+  };
+
+  // Add individual or class-based sessions
+  const addSessions = (customerId, count, classId = null) => {
+    const customer = getCustomer(customerId);
+    if (!customer) {
+      return { success: false, error: 'Customer not found' };
+    }
+
+    const numericCount = parseInt(count, 10);
+    if (!Number.isFinite(numericCount) || numericCount <= 0) {
+      return { success: false, error: 'Sessions must be a positive number' };
+    }
+
+    if (classId) {
+      const parsedClassId = parseInt(classId, 10);
+      const cls = getClass(parsedClassId);
+      if (!cls) {
+        return { success: false, error: 'Class not found' };
+      }
+
+      const classSessions = { ...(customer.classSessions || {}) };
+      classSessions[parsedClassId] = (classSessions[parsedClassId] || 0) + numericCount;
+
+      const enrolledClasses = customer.enrolledClasses || [];
+      const updatedEnrolled = enrolledClasses.includes(parsedClassId)
+        ? enrolledClasses
+        : [...enrolledClasses, parsedClassId];
+
+      updateCustomer(customerId, {
+        classSessions,
+        enrolledClasses: updatedEnrolled
+      });
+
+      return {
+        success: true,
+        type: 'class',
+        classId: parsedClassId,
+        sessionsAdded: numericCount
+      };
+    }
+
+    const dropInSessions = (customer.dropInSessions || 0) + numericCount;
+    updateCustomer(customerId, { dropInSessions });
+
+    return {
+      success: true,
+      type: 'dropin',
+      sessionsAdded: numericCount
+    };
   };
 
   // Attendance operations
@@ -209,7 +264,8 @@ export const DataProvider = ({ children }) => {
     updateClass,
     deleteClass,
     getClass,
-    recordAttendance
+    recordAttendance,
+    addSessions
   };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

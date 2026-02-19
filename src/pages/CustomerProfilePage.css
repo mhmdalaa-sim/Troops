@@ -1,0 +1,188 @@
+.customer-profile-page {
+  padding: 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.customer-profile-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.customer-profile-header h1 {
+  margin: 0;
+}
+
+.customer-profile-id {
+  margin: 0.25rem 0 0;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.customer-profile-content {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr);
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+.customer-card-panel,
+.customer-qr-panel {
+  padding: 1.25rem 1.5rem;
+}
+
+.customer-main-info {
+  display: flex;
+  gap: 1.25rem;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.customer-photo {
+  width: 72px;
+  height: 72px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.customer-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-placeholder span {
+  display: inline-block;
+}
+
+.membership-section {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 1rem;
+}
+
+.membership-section p {
+  margin: 0.25rem 0;
+}
+
+.customer-qr-panel h2 {
+  margin-top: 0;
+}
+
+.qr-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 0;
+}
+
+.qr-help-text {
+  font-size: 0.9rem;
+  color: #6b7280;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.clockin-section {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 1rem;
+}
+
+.clockin-section .form-group {
+  margin-bottom: 0.75rem;
+}
+
+.clock-in-btn {
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.customer-profile-lower {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+
+.detail-section {
+  padding: 1.25rem 1.5rem;
+}
+
+.class-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.class-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.class-name {
+  font-weight: 600;
+}
+
+.class-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.attendance-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.attendance-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+}
+
+.helper-text {
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin: 0 0 0.75rem;
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+@media (max-width: 960px) {
+  .customer-profile-content {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .customer-profile-lower {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+

@@ -9,6 +9,7 @@ const CustomerForm = ({ onClose, onSubmit }) => {
     name: '',
     phone: '',
     email: '',
+    photoUrl: '',
     membershipType: 'Monthly Premium',
     subscriptionFee: 150,
     startDate: new Date().toISOString().split('T')[0],
@@ -106,6 +107,17 @@ const CustomerForm = ({ onClose, onSubmit }) => {
               placeholder="John Smith"
             />
             {errors.name && <span className="error-text">{errors.name}</span>}
+          </div>
+
+          <div className="form-group">
+            <label>Photo URL (optional)</label>
+            <input
+              type="url"
+              name="photoUrl"
+              value={formData.photoUrl}
+              onChange={handleChange}
+              placeholder="https://example.com/photo.jpg"
+            />
           </div>
 
           <div className="form-row">

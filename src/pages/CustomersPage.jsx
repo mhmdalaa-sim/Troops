@@ -1,7 +1,7 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import CustomerCard from '../components/Customer/CustomerCard';
-import CustomerDetail from '../components/Customer/CustomerDetail';
 import CustomerForm from '../components/Customer/CustomerForm';
 import SearchBar from '../components/Shared/SearchBar';
 import FilterPanel from '../components/Shared/FilterPanel';
@@ -9,9 +9,9 @@ import './CustomersPage.css';
 
 const CustomersPage = () => {
   const { customers } = useData();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [updateTrigger, setUpdateTrigger] = useState(0);
 
@@ -69,7 +69,6 @@ const CustomersPage = () => {
 
   const handleUpdate = () => {
     setUpdateTrigger(prev => prev + 1);
-    setSelectedCustomer(null);
   };
 
   return (
@@ -100,7 +99,7 @@ const CustomersPage = () => {
           <CustomerCard
             key={customer.id}
             customer={customer}
-            onClick={setSelectedCustomer}
+            onClick={(cust) => navigate(`/customers/${cust.id}`)}
           />
         ))}
       </div>
@@ -110,14 +109,6 @@ const CustomersPage = () => {
           <h3>No customers found</h3>
           <p>Try adjusting your search or filters</p>
         </div>
-      )}
-
-      {selectedCustomer && (
-        <CustomerDetail
-          customer={selectedCustomer}
-          onClose={() => setSelectedCustomer(null)}
-          onUpdate={handleUpdate}
-        />
       )}
 
       {showForm && (

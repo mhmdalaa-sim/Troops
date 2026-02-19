@@ -5,6 +5,7 @@ import Navbar from './components/Layout/Navbar';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import CustomersPage from './pages/CustomersPage';
+import CustomerProfilePage from './pages/CustomerProfilePage';
 import ClassesPage from './pages/ClassesPage';
 import AttendancePage from './pages/AttendancePage';
 import './App.css';
@@ -33,6 +34,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <CustomersPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/customers/:id"
+        element={
+          <ProtectedRoute>
+            <CustomerProfilePage />
           </ProtectedRoute>
         }
       />
