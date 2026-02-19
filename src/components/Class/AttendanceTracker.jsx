@@ -22,7 +22,7 @@ const AttendanceTracker = () => {
   // Get enrolled classes for selected customer
   const selectedCustomer = selectedCustomerId ? customers.find(c => c.id === parseInt(selectedCustomerId)) : null;
   const enrolledClasses = selectedCustomer
-    ? classes.filter(cls => (selectedCustomer.enrolledClasses || []).map(Number).includes(cls.id))
+    ? classes // show all classes in the dropdown; enrollment will be automatic on check-in
     : [];
 
   const handleClockIn = () => {
@@ -112,16 +112,14 @@ const AttendanceTracker = () => {
               <option value="">-- Select Class --</option>
               {enrolledClasses.map(cls => {
                 const sessionsForClass = selectedCustomer?.classSessions?.[cls.id] || 0;
+                const isEnrolled = (selectedCustomer?.enrolledClasses || []).map(Number).includes(cls.id);
                 return (
                   <option key={cls.id} value={cls.id}>
-                    {cls.name} - {cls.schedule} ({sessionsForClass} sessions available, -{cls.sessionsPerVisit || 1} per visit)
+                    {cls.name} - {cls.schedule} ({sessionsForClass} sessions available, -{cls.sessionsPerVisit || 1} per visit){!isEnrolled ? ' — will enroll on first check-in' : ''}
                   </option>
                 );
               })}
             </select>
-            {selectedCustomerId && enrolledClasses.length === 0 && (
-              <span className="error-text">Customer is not enrolled in any classes</span>
-            )}
           </div>
 
           <button className="primary clock-in-btn" onClick={handleClockIn}>

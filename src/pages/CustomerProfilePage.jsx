@@ -290,18 +290,16 @@ const CustomerProfilePage = () => {
                 onChange={(e) => setSelectedClassId(e.target.value)}
               >
                 <option value="">-- Select Class --</option>
-                {enrolledClassDetails.map((cls) => (
-                  <option key={cls.id} value={cls.id}>
-                    {cls.name} - {cls.schedule} ({cls.sessions} sessions, -{cls.sessionsPerVisit}{' '}
-                    per visit)
-                  </option>
-                ))}
+                {classes.map((cls) => {
+                  const sessions = customer.classSessions?.[cls.id] || 0;
+                  const isEnrolled = (customer.enrolledClasses || []).map(Number).includes(cls.id);
+                  return (
+                    <option key={cls.id} value={cls.id}>
+                      {cls.name} - {cls.schedule} ({sessions} sessions{isEnrolled ? '' : ', will enroll on first check-in'} — -{cls.sessionsPerVisit || 1} per visit)
+                    </option>
+                  );
+                })}
               </select>
-              {enrolledClassDetails.length === 0 && (
-                <span className="empty-state">
-                  This customer is not enrolled in any classes yet.
-                </span>
-              )}
             </div>
             <button className="primary clock-in-btn" onClick={handleClockIn}>
               🥋 Clock In

@@ -230,25 +230,32 @@ export const DataProvider = ({ children }) => {
       classId,
       timestamp: new Date().toISOString()
     };
+
     setAttendanceRecords([...attendanceRecords, record]);
-    
+
     // Get sessions to deduct based on class
     const selectedClass = getClass(classId);
     const sessionsToDeduct = selectedClass?.sessionsPerVisit || 1;
-    
+
     // Update customer's attendance log and decrement sessions for that specific class
     const customer = getCustomer(customerId);
+    const parsedClassId = parseInt(classId, 10);
     const updatedClassSessions = { ...(customer?.classSessions || {}) };
-    
-    if (updatedClassSessions[classId] !== undefined) {
-      updatedClassSessions[classId] = Math.max(0, updatedClassSessions[classId] - sessionsToDeduct);
+
+    if (updatedClassSessions[parsedClassId] !== undefined) {
+      updatedClassSessions[parsedClassId] = Math.max(0, updatedClassSessions[parsedClassId] - sessionsToDeduct);
     }
-    
+
+    // Ensure customer is enrolled in the class after a clock-in (auto-enroll on first check-in)
+    const enrolledClasses = customer?.enrolledClasses || [];
+    const updatedEnrolled = enrolledClasses.includes(parsedClassId) ? enrolledClasses : [...enrolledClasses, parsedClassId];
+
     updateCustomer(customerId, {
       attendanceLog: [...(customer?.attendanceLog || []), record],
-      classSessions: updatedClassSessions
+      classSessions: updatedClassSessions,
+      enrolledClasses: updatedEnrolled
     });
-    
+
     return record;
   };
 
