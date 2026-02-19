@@ -90,9 +90,12 @@ const AttendanceTracker = () => {
             >
               <option value="">-- Select Customer --</option>
               {(searchTerm ? filteredCustomers : customers).map(customer => {
-                const totalSessions = customer.classSessions 
+                const classTotal = customer.classSessions
                   ? Object.values(customer.classSessions).reduce((sum, val) => sum + val, 0)
-                  : customer.remainingSessions || 0;
+                  : 0;
+                const dropInTotal = customer.dropInSessions || 0;
+                const legacyTotal = !customer.classSessions ? (customer.remainingSessions || 0) : 0;
+                const totalSessions = classTotal + dropInTotal + legacyTotal;
                 return (
                   <option key={customer.id} value={customer.id}>
                     {customer.name} - {customer.phone} ({totalSessions} total sessions)

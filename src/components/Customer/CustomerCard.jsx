@@ -15,10 +15,13 @@ const CustomerCard = ({ customer, onClick }) => {
     }
   };
 
-  // Calculate total sessions across all classes
-  const totalSessions = customer.classSessions 
+  // Calculate total sessions across all classes plus general drop-in
+  const classTotal = customer.classSessions
     ? Object.values(customer.classSessions).reduce((sum, val) => sum + val, 0)
-    : customer.remainingSessions || 0;
+    : 0;
+  const dropInTotal = customer.dropInSessions || 0;
+  const legacyTotal = !customer.classSessions ? (customer.remainingSessions || 0) : 0;
+  const totalSessions = classTotal + dropInTotal + legacyTotal;
 
   const getSessionWarning = (remaining) => {
     if (remaining === 0) return 'session-warning critical';
