@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate, useLocation } from 'react-router-dom';
 import './LoginPage.css';
 
 const LoginPage = () => {
   const { login } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [name, setName] = useState('');
   const [selectedRole, setSelectedRole] = useState('receptionist');
 
@@ -11,6 +14,8 @@ const LoginPage = () => {
     e.preventDefault();
     if (name.trim()) {
       login(selectedRole, name);
+      const dest = location.state?.from?.pathname || '/';
+      navigate(dest, { replace: true });
     }
   };
 

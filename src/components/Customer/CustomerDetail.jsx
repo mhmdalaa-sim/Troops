@@ -51,13 +51,14 @@ const CustomerDetail = ({ customer, onClose, onUpdate }) => {
     }
   };
 
-  const enrolledClassNames = customer.enrolledClasses
-    ?.map(classId => {
+  const enrolledClassNames = (customer.enrolledClasses || [])
+    .map(classIdRaw => {
+      const classId = parseInt(classIdRaw, 10);
       const cls = classes.find(c => c.id === classId);
       const sessions = customer.classSessions?.[classId] || 0;
       return cls ? { name: cls.name, id: classId, sessions } : null;
     })
-    .filter(Boolean) || [];
+    .filter(Boolean);
 
   const totalSessions = customer.classSessions 
     ? Object.values(customer.classSessions).reduce((sum, val) => sum + val, 0)

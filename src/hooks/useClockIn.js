@@ -36,7 +36,7 @@ export const useClockIn = () => {
 
     // Get sessions from class-specific or general drop-in balance
     const classSessions = customer.classSessions || {};
-    const enrolledInClass = customer.enrolledClasses?.includes(classId);
+    const enrolledInClass = (customer.enrolledClasses || []).map(Number).includes(Number(classId));
     const sessionsForClass = classSessions[classId] || 0;
     const dropInSessions = customer.dropInSessions || 0;
     const sessionsToDeduct = selectedClass.sessionsPerVisit || 1;

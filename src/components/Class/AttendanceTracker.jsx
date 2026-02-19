@@ -21,8 +21,8 @@ const AttendanceTracker = () => {
 
   // Get enrolled classes for selected customer
   const selectedCustomer = selectedCustomerId ? customers.find(c => c.id === parseInt(selectedCustomerId)) : null;
-  const enrolledClasses = selectedCustomer 
-    ? classes.filter(cls => selectedCustomer.enrolledClasses?.includes(cls.id))
+  const enrolledClasses = selectedCustomer
+    ? classes.filter(cls => (selectedCustomer.enrolledClasses || []).map(Number).includes(cls.id))
     : [];
 
   const handleClockIn = () => {

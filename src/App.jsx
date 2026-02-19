@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { DataProvider } from './context/DataContext';
 import Navbar from './components/Layout/Navbar';
@@ -12,7 +12,8 @@ import './App.css';
 
 const ProtectedRoute = ({ children }) => {
   const { user } = useAuth();
-  return user ? children : <Navigate to="/login" />;
+  const location = useLocation();
+  return user ? children : <Navigate to="/login" state={{ from: location }} replace />;
 };
 
 const AppRoutes = () => {

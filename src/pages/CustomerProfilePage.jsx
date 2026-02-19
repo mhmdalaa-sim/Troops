@@ -47,8 +47,9 @@ const CustomerProfilePage = () => {
     );
   }
 
-  const enrolledClassDetails = customer.enrolledClasses
-    ?.map((classId) => {
+  const enrolledClassDetails = (customer.enrolledClasses || [])
+    .map((classIdRaw) => {
+      const classId = parseInt(classIdRaw, 10);
       const cls = classes.find((c) => c.id === classId);
       const sessions = customer.classSessions?.[classId] || 0;
       return cls
@@ -61,7 +62,7 @@ const CustomerProfilePage = () => {
           }
         : null;
     })
-    .filter(Boolean) || [];
+    .filter(Boolean);
 
   const totalSessions = customer.classSessions
     ? Object.values(customer.classSessions).reduce((sum, val) => sum + val, 0)
@@ -82,40 +83,76 @@ const CustomerProfilePage = () => {
   };
 
   const handleShareWhatsApp = () => {
-    const rawPhone = customer.phone || '';
-    let cleanedPhone = rawPhone.replace(/\D/g, '');
+    (async () => {
+      if (!cardRef.current) {
+        setMessage('Error: Card not available');
+        return;
+      }
 
-    if (!cleanedPhone) {
-      setMessage('Error: Customer phone number is missing or invalid.');
-      return;
-    }
+      try {
+        const canvas = await html2canvas(cardRef.current, {
+          backgroundColor: '#ffffff',
+          scale: 2,
+        });
 
-    // Normalize common international/local formats for WhatsApp links.
-    // Examples:
-    //  - +20 12 06151914  -> 201206151914
-    //  - 01206151914      -> 201206151914 (replace leading 0 with country code 20)
-    //  - 00201206151914   -> 201206151914 (strip leading 00)
-    if (cleanedPhone.startsWith('00')) {
-      cleanedPhone = cleanedPhone.replace(/^00/, '');
-    }
+        // Try Web Share API with files (mobile browsers / compatible platforms)
+        const blob = await new Promise((res) => canvas.toBlob(res, 'image/png'));
+        const file = new File([blob], `${customer.name.replace(/\s+/g, '_')}_virtual_card.png`, { type: 'image/png' });
 
-    if (cleanedPhone.startsWith('0')) {
-      // Assume Egyptian local number like 0XXXXXXXXXX -> prepend country code 20
-      cleanedPhone = `20${cleanedPhone.slice(1)}`;
-    }
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], text: `Virtual card for ${customer.name}` });
+          setMessage('Share sheet opened. Choose WhatsApp to send the photo.');
+          setTimeout(() => setMessage(''), 4000);
+          return;
+        }
 
-    const lines = [
-      `Your virtual gym card, ${customer.name}:`,
-      profileUrl,
-    ];
+        // Some browsers support navigator.share with files without canShare
+        if (navigator.share) {
+          try {
+            // attempt to share (may fail on desktop)
+            await navigator.share({ files: [file], text: `Virtual card for ${customer.name}` });
+            setMessage('Share sheet opened. Choose WhatsApp to send the photo.');
+            setTimeout(() => setMessage(''), 4000);
+            return;
+          } catch (err) {
+            // fallthrough to fallback behavior
+          }
+        }
 
-    if (customer.photoUrl) {
-      lines.push(`Photo: ${customer.photoUrl}`);
-    }
+        // Fallback: open WhatsApp chat with a helpful message and open the image in a new tab so user can attach it manually
+        const rawPhone = customer.phone || '';
+        let cleanedPhone = rawPhone.replace(/\D/g, '');
+        if (!cleanedPhone) {
+          // still allow opening WhatsApp Web without a number
+          const msg = encodeURIComponent(`Virtual card for ${customer.name}. Please attach the card image.`);
+          window.open(`https://web.whatsapp.com/`, '_blank');
+          // open image in new tab for manual attach/download
+          const dataUrl = canvas.toDataURL('image/png');
+          const imgWin = window.open();
+          if (imgWin) {
+            imgWin.document.write(`<title>${customer.name} - Virtual Card</title><img src="${dataUrl}" alt="${customer.name} virtual card"/>`);
+          }
+          setMessage('Opened WhatsApp Web and the card image in a new tab. Attach the image to send.');
+          setTimeout(() => setMessage(''), 6000);
+          return;
+        }
 
-    const text = encodeURIComponent(lines.join('\n'));
-    const url = `https://wa.me/${cleanedPhone}?text=${text}`;
-    window.open(url, '_blank');
+        if (cleanedPhone.startsWith('00')) cleanedPhone = cleanedPhone.replace(/^00/, '');
+        if (cleanedPhone.startsWith('0')) cleanedPhone = `20${cleanedPhone.slice(1)}`;
+
+        const msg = encodeURIComponent(`Virtual card for ${customer.name}. I have attached the card image.`);
+        window.open(`https://wa.me/${cleanedPhone}?text=${msg}`, '_blank');
+        const dataUrl = canvas.toDataURL('image/png');
+        const imgWin2 = window.open();
+        if (imgWin2) {
+          imgWin2.document.write(`<title>${customer.name} - Virtual Card</title><img src="${dataUrl}" alt="${customer.name} virtual card"/>`);
+        }
+        setMessage('WhatsApp opened. Attach the card image from the new tab to send.');
+        setTimeout(() => setMessage(''), 6000);
+      } catch (err) {
+        setMessage('Error: Could not generate or share card image.');
+      }
+    })();
   };
 
   const handleDownloadCardImage = async () => {
