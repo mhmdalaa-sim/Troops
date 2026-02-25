@@ -1,4 +1,12 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { db } from '../firebase/config';
+import {
+  collection,
+  getDocs,
+  doc,
+  setDoc,
+  deleteDoc,
+} from 'firebase/firestore';
 
 const DataContext = createContext();
 
@@ -95,160 +103,257 @@ const initialClasses = [
 ];
 
 export const DataProvider = ({ children }) => {
-  const [customers, setCustomers] = useState(() => {
-    const saved = localStorage.getItem('customers');
-    return saved ? JSON.parse(saved) : initialCustomers;
-  });
+  const [customers, setCustomers] = useState([]);
+  const [classes, setClasses] = useState([]);
+  const [attendanceRecords, setAttendanceRecords] = useState([]);
 
-  const [classes, setClasses] = useState(() => {
-    const saved = localStorage.getItem('classes');
-    return saved ? JSON.parse(saved) : initialClasses;
-  });
-
-  const [attendanceRecords, setAttendanceRecords] = useState(() => {
-    const saved = localStorage.getItem('attendanceRecords');
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  // Persist to localStorage
+  // Load initial data from Firestore (fallback to local mock data if empty or failed)
   useEffect(() => {
-    localStorage.setItem('customers', JSON.stringify(customers));
-  }, [customers]);
+    const loadFromFirestore = async () => {
+      try {
+        const [classesSnap, customersSnap] = await Promise.all([
+          getDocs(collection(db, 'classes')),
+          getDocs(collection(db, 'customers')),
+        ]);
 
-  useEffect(() => {
-    localStorage.setItem('classes', JSON.stringify(classes));
-  }, [classes]);
+        const loadedClasses = classesSnap.docs.map((d) => ({
+          id: d.id,
+          ...d.data()
+        }));
+        const loadedCustomers = customersSnap.docs.map((d) => ({
+          id: d.id,
+          ...d.data()
+        }));
 
-  useEffect(() => {
-    localStorage.setItem('attendanceRecords', JSON.stringify(attendanceRecords));
-  }, [attendanceRecords]);
+        console.log('[DataContext] Loaded from Firestore:', { classes: loadedClasses.length, customers: loadedCustomers.length });
+        setClasses(loadedClasses.length ? loadedClasses : initialClasses);
+        setCustomers(loadedCustomers.length ? loadedCustomers : initialCustomers);
+      } catch (err) {
+        console.error('Failed to load data from Firestore, using local defaults.', err);
+        setClasses(initialClasses);
+        setCustomers(initialCustomers);
+      }
+    };
+
+    loadFromFirestore();
+  }, []);
 
   // Customer operations
   const addCustomer = (customer) => {
+    const newId = Date.now();
     const newCustomer = {
       ...customer,
-      id: Date.now(),
+      id: newId,
       attendanceLog: [],
       freezePeriods: [],
       status: 'active',
-      dropInSessions: 0
+      dropInSessions: 0,
     };
-    setCustomers([...customers, newCustomer]);
+    setCustomers((prev) => [...prev, newCustomer]);
+
+    (async () => {
+      try {
+        await setDoc(doc(collection(db, 'customers'), String(newId)), newCustomer);
+      } catch (err) {
+        console.error('Failed to persist customer to Firestore', err);
+      }
+    })();
+
     return newCustomer;
   };
 
   const updateCustomer = (id, updates) => {
-    setCustomers(customers.map(c => c.id === id ? { ...c, ...updates } : c));
+    const strId = String(id);
+    setCustomers((prev) => prev.map((c) => (String(c.id) === strId ? { ...c, ...updates } : c)));
+
+    (async () => {
+      try {
+        const ref = doc(collection(db, 'customers'), strId);
+        await setDoc(ref, { ...(customers.find((c) => String(c.id) === strId) || {}), ...updates }, { merge: true });
+      } catch (err) {
+        console.error('Failed to update customer in Firestore', err);
+      }
+    })();
   };
 
   const deleteCustomer = (id) => {
-    setCustomers(customers.filter(c => c.id !== id));
+    const strId = String(id);
+    setCustomers((prev) => prev.filter((c) => String(c.id) !== strId));
+
+    (async () => {
+      try {
+        await deleteDoc(doc(collection(db, 'customers'), strId));
+      } catch (err) {
+        console.error('Failed to delete customer from Firestore', err);
+      }
+    })();
   };
 
   const getCustomer = (id) => {
-    return customers.find(c => c.id === id);
+    const strId = String(id);
+    return customers.find(c => String(c.id) === strId);
   };
 
   // Class operations
   const addClass = (classData) => {
+    const newId = Date.now();
     const newClass = {
       ...classData,
-      id: Date.now(),
-      enrolledCount: 0
+      id: newId,
+      enrolledCount: 0,
     };
-    setClasses([...classes, newClass]);
+    setClasses((prev) => [...prev, newClass]);
+
+    (async () => {
+      try {
+        await setDoc(doc(collection(db, 'classes'), String(newId)), newClass);
+      } catch (err) {
+        console.error('Failed to persist class to Firestore', err);
+      }
+    })();
+
     return newClass;
   };
 
   const updateClass = (id, updates) => {
-    setClasses(classes.map(c => c.id === id ? { ...c, ...updates } : c));
+    const strId = String(id);
+    setClasses((prev) => prev.map((c) => (String(c.id) === strId ? { ...c, ...updates } : c)));
+
+    (async () => {
+      try {
+        const ref = doc(collection(db, 'classes'), strId);
+        await setDoc(ref, { ...(classes.find((c) => String(c.id) === strId) || {}), ...updates }, { merge: true });
+      } catch (err) {
+        console.error('Failed to update class in Firestore', err);
+      }
+    })();
   };
 
   const deleteClass = (id) => {
-    setClasses(classes.filter(c => c.id !== id));
+    const strId = String(id);
+    setClasses((prev) => prev.filter((c) => String(c.id) !== strId));
+
+    (async () => {
+      try {
+        await deleteDoc(doc(collection(db, 'classes'), strId));
+      } catch (err) {
+        console.error('Failed to delete class from Firestore', err);
+      }
+    })();
   };
 
   const getClass = (id) => {
-    return classes.find(c => c.id === id);
+    if (!id) return null;
+    const strId = String(id).toLowerCase();
+    // Try matching by ID first, then by Name as a fallback
+    return classes.find(c =>
+      String(c.id).toLowerCase() === strId ||
+      String(c.name).toLowerCase() === strId
+    );
   };
 
   // Add individual or class-based sessions
   const addSessions = (customerId, count, classId = null) => {
+    console.log('[addSessions] called with:', { customerId, count, classId });
     const customer = getCustomer(customerId);
+    console.log('[addSessions] customer found:', customer ? { id: customer.id, name: customer.name, classSessions: customer.classSessions, dropInSessions: customer.dropInSessions, enrolledClasses: customer.enrolledClasses } : null);
     if (!customer) {
+      console.log('[addSessions] ERROR: Customer not found');
       return { success: false, error: 'Customer not found' };
     }
 
     const numericCount = parseInt(count, 10);
     if (!Number.isFinite(numericCount) || numericCount <= 0) {
+      console.log('[addSessions] ERROR: Invalid count', count, numericCount);
       return { success: false, error: 'Sessions must be a positive number' };
     }
 
     if (classId) {
-      const parsedClassId = parseInt(classId, 10);
-      const cls = getClass(parsedClassId);
+      const strClassId = String(classId);
+      const cls = getClass(strClassId);
+      console.log('[addSessions] class lookup:', { strClassId, classFound: !!cls, className: cls?.name });
       if (!cls) {
+        console.log('[addSessions] ERROR: Class not found for id', strClassId);
         return { success: false, error: 'Class not found' };
       }
 
+      // Build updated classSessions with consistent keys
       const classSessions = { ...(customer.classSessions || {}) };
-      classSessions[parsedClassId] = (classSessions[parsedClassId] || 0) + numericCount;
+      // Find existing key for this class (compare as strings)
+      const existingKey = Object.keys(classSessions).find(k => String(k) === strClassId);
+      const currentSessions = existingKey !== undefined ? classSessions[existingKey] : 0;
+      // Use the existing key format, or fall back to the classId
+      const keyToUse = existingKey !== undefined ? existingKey : classId;
+      classSessions[keyToUse] = currentSessions + numericCount;
+      console.log('[addSessions] class sessions updated:', { existingKey, currentSessions, keyToUse, newTotal: classSessions[keyToUse], classSessions });
 
+      // Type-safe enrollment check
       const enrolledClasses = customer.enrolledClasses || [];
-      const updatedEnrolled = enrolledClasses.includes(parsedClassId)
+      const alreadyEnrolled = enrolledClasses.some(e => String(e) === strClassId);
+      const updatedEnrolled = alreadyEnrolled
         ? enrolledClasses
-        : [...enrolledClasses, parsedClassId];
+        : [...enrolledClasses, classId];
+      console.log('[addSessions] enrollment:', { alreadyEnrolled, updatedEnrolled });
 
       updateCustomer(customerId, {
         classSessions,
         enrolledClasses: updatedEnrolled
       });
 
-      return {
+      const result = {
         success: true,
         type: 'class',
-        classId: parsedClassId,
+        classId: classId,
         sessionsAdded: numericCount
       };
+      console.log('[addSessions] SUCCESS (class):', result);
+      return result;
     }
 
+    // Drop-in sessions (no specific class)
     const dropInSessions = (customer.dropInSessions || 0) + numericCount;
+    console.log('[addSessions] drop-in sessions:', { oldDropIn: customer.dropInSessions || 0, added: numericCount, newTotal: dropInSessions });
     updateCustomer(customerId, { dropInSessions });
 
-    return {
+    const result = {
       success: true,
       type: 'dropin',
       sessionsAdded: numericCount
     };
+    console.log('[addSessions] SUCCESS (dropin):', result);
+    return result;
   };
 
   // Attendance operations
   const recordAttendance = (customerId, classId) => {
+    const strClassId = String(classId);
     const record = {
       id: Date.now(),
       customerId,
-      classId,
+      classId: classId,
       timestamp: new Date().toISOString()
     };
 
     setAttendanceRecords([...attendanceRecords, record]);
 
     // Get sessions to deduct based on class
-    const selectedClass = getClass(classId);
+    const selectedClass = getClass(strClassId);
     const sessionsToDeduct = selectedClass?.sessionsPerVisit || 1;
 
     // Update customer's attendance log and decrement sessions for that specific class
     const customer = getCustomer(customerId);
-    const parsedClassId = parseInt(classId, 10);
     const updatedClassSessions = { ...(customer?.classSessions || {}) };
 
-    if (updatedClassSessions[parsedClassId] !== undefined) {
-      updatedClassSessions[parsedClassId] = Math.max(0, updatedClassSessions[parsedClassId] - sessionsToDeduct);
+    // Find matching key in classSessions (compare as strings)
+    const classKey = Object.keys(updatedClassSessions).find(k => String(k) === strClassId);
+    if (classKey !== undefined && updatedClassSessions[classKey] !== undefined) {
+      updatedClassSessions[classKey] = Math.max(0, updatedClassSessions[classKey] - sessionsToDeduct);
     }
 
     // Ensure customer is enrolled in the class after a clock-in (auto-enroll on first check-in)
     const enrolledClasses = customer?.enrolledClasses || [];
-    const updatedEnrolled = enrolledClasses.includes(parsedClassId) ? enrolledClasses : [...enrolledClasses, parsedClassId];
+    const alreadyEnrolled = enrolledClasses.some(e => String(e) === strClassId);
+    const updatedEnrolled = alreadyEnrolled ? enrolledClasses : [...enrolledClasses, classId];
 
     updateCustomer(customerId, {
       attendanceLog: [...(customer?.attendanceLog || []), record],

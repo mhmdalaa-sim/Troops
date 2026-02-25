@@ -9,15 +9,20 @@ const CustomerDetail = ({ customer, onClose, onUpdate }) => {
   const { classes, updateCustomer } = useData();
   const { clockIn } = useClockIn();
   const { freezeMembership, unfreezeMembership } = useFreezeMembership();
-  
+
   const [showFreezeForm, setShowFreezeForm] = useState(false);
   const [freezeStart, setFreezeStart] = useState('');
   const [freezeEnd, setFreezeEnd] = useState('');
   const [freezeReason, setFreezeReason] = useState('');
   const [message, setMessage] = useState('');
+  const [selectedClockInClassId, setSelectedClockInClassId] = useState('');
 
   const handleClockIn = () => {
-    const result = clockIn(customer.id);
+    if (!selectedClockInClassId) {
+      setMessage('Error: Please select a class to clock in.');
+      return;
+    }
+    const result = clockIn(customer.id, selectedClockInClassId);
     setMessage(result.success ? result.message : `Error: ${result.error}`);
     if (result.success) {
       setTimeout(() => setMessage(''), 3000);
@@ -30,10 +35,10 @@ const CustomerDetail = ({ customer, onClose, onUpdate }) => {
       setMessage('Please provide start and end dates');
       return;
     }
-    
+
     const result = freezeMembership(customer.id, freezeStart, freezeEnd, freezeReason);
     setMessage(result.success ? result.message : `Error: ${result.error}`);
-    
+
     if (result.success) {
       setShowFreezeForm(false);
       setFreezeStart('');
@@ -53,10 +58,12 @@ const CustomerDetail = ({ customer, onClose, onUpdate }) => {
 
   const enrolledClassNames = (customer.enrolledClasses || [])
     .map(classIdRaw => {
-      const classId = parseInt(classIdRaw, 10);
-      const cls = classes.find(c => c.id === classId);
-      const sessions = customer.classSessions?.[classId] || 0;
-      return cls ? { name: cls.name, id: classId, sessions } : null;
+      const strId = String(classIdRaw);
+      const cls = classes.find(c => String(c.id) === strId);
+      // Look up sessions using the original key format
+      const sessionKey = Object.keys(customer.classSessions || {}).find(k => String(k) === strId);
+      const sessions = sessionKey !== undefined ? customer.classSessions[sessionKey] : 0;
+      return cls ? { name: cls.name, id: classIdRaw, sessions } : null;
     })
     .filter(Boolean);
 
@@ -144,10 +151,30 @@ const CustomerDetail = ({ customer, onClose, onUpdate }) => {
         </div>
 
         <div className="modal-actions">
-          <button className="primary" onClick={handleClockIn}>
-            Clock In
-          </button>
-          
+          <div className="clockin-section" style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', width: '100%' }}>
+            <select
+              value={selectedClockInClassId}
+              onChange={(e) => setSelectedClockInClassId(e.target.value)}
+              style={{ flex: 1, minWidth: '180px' }}
+            >
+              <option value="">-- Select Class --</option>
+              {classes.map((cls, idx) => {
+                const strClsId = String(cls.id || cls.name || idx);
+                const sessionKey = Object.keys(customer.classSessions || {}).find(k => String(k) === strClsId);
+                const sessions = sessionKey !== undefined ? customer.classSessions[sessionKey] : 0;
+                const isEnrolled = (customer.enrolledClasses || []).some(e => String(e) === strClsId);
+                return (
+                  <option key={strClsId} value={strClsId}>
+                    {cls.name} ({sessions} sessions{isEnrolled ? '' : ', will enroll'})
+                  </option>
+                );
+              })}
+            </select>
+            <button className="primary" onClick={handleClockIn}>
+              🥋 Clock In
+            </button>
+          </div>
+
           {customer.status === 'frozen' ? (
             <button className="secondary" onClick={handleUnfreeze}>
               Unfreeze Membership
@@ -164,24 +191,24 @@ const CustomerDetail = ({ customer, onClose, onUpdate }) => {
             <h3>Freeze Membership</h3>
             <div className="form-group">
               <label>Start Date</label>
-              <input 
-                type="date" 
-                value={freezeStart} 
-                onChange={(e) => setFreezeStart(e.target.value)} 
+              <input
+                type="date"
+                value={freezeStart}
+                onChange={(e) => setFreezeStart(e.target.value)}
               />
             </div>
             <div className="form-group">
               <label>End Date</label>
-              <input 
-                type="date" 
-                value={freezeEnd} 
-                onChange={(e) => setFreezeEnd(e.target.value)} 
+              <input
+                type="date"
+                value={freezeEnd}
+                onChange={(e) => setFreezeEnd(e.target.value)}
               />
             </div>
             <div className="form-group">
               <label>Reason (Optional)</label>
-              <textarea 
-                value={freezeReason} 
+              <textarea
+                value={freezeReason}
                 onChange={(e) => setFreezeReason(e.target.value)}
                 placeholder="Medical, travel, etc."
               />

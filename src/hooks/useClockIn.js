@@ -10,7 +10,7 @@ export const useClockIn = () => {
 
   const clockIn = useCallback((customerId, classId = null) => {
     const customer = getCustomer(customerId);
-    
+
     if (!customer) {
       return { success: false, error: 'Customer not found' };
     }
@@ -36,10 +36,21 @@ export const useClockIn = () => {
 
     // Get sessions from class-specific or general drop-in balance
     const classSessions = customer.classSessions || {};
-    const enrolledInClass = (customer.enrolledClasses || []).map(Number).includes(Number(classId));
-    const sessionsForClass = classSessions[classId] || 0;
+    const strClassId = String(classId);
+    const enrolledInClass = (customer.enrolledClasses || []).some(e => String(e) === strClassId);
+    // Find the matching key in classSessions (compare as strings)
+    const classSessionKey = Object.keys(classSessions).find(k => String(k) === strClassId);
+    const sessionsForClass = classSessionKey !== undefined ? classSessions[classSessionKey] : 0;
     const dropInSessions = customer.dropInSessions || 0;
     const sessionsToDeduct = selectedClass.sessionsPerVisit || 1;
+
+    console.log('[clockIn] session check:', {
+      customerId, classId: strClassId, className: selectedClass.name,
+      enrolledInClass, classSessionKey, sessionsForClass,
+      dropInSessions, sessionsToDeduct,
+      classSessions: JSON.stringify(classSessions),
+      enrolledClasses: JSON.stringify(customer.enrolledClasses)
+    });
 
     // Decide which balance to use:
     // 1) If enrolled and has enough class sessions -> use class balance
@@ -50,6 +61,8 @@ export const useClockIn = () => {
     } else if (dropInSessions >= sessionsToDeduct) {
       source = 'dropin';
     }
+
+    console.log('[clockIn] source decision:', source);
 
     if (!source) {
       return {

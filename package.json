@@ -7,9 +7,13 @@
     "dev": "vite",
     "start": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "seed:firestore": "node scripts/seed-firestore.js",
+    "seed:firestore:direct": "node scripts/seed-firestore.js",
+    "seed:auth:admin": "node scripts/seed-auth-users-admin.js"
   },
   "dependencies": {
+    "firebase": "^11.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.20.0",
@@ -20,6 +24,7 @@
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",
     "@vitejs/plugin-react": "^4.2.1",
+    "firebase-admin": "^13.0.0",
     "vite": "^5.0.8"
   }
 }

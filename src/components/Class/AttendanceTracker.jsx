@@ -7,7 +7,7 @@ import './AttendanceTracker.css';
 const AttendanceTracker = () => {
   const { customers, classes, attendanceRecords } = useData();
   const { clockIn } = useClockIn();
-  
+
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [selectedClassId, setSelectedClassId] = useState('');
   const [message, setMessage] = useState('');
@@ -20,7 +20,7 @@ const AttendanceTracker = () => {
   );
 
   // Get enrolled classes for selected customer
-  const selectedCustomer = selectedCustomerId ? customers.find(c => c.id === parseInt(selectedCustomerId)) : null;
+  const selectedCustomer = selectedCustomerId ? customers.find(c => String(c.id) === String(selectedCustomerId)) : null;
   const enrolledClasses = selectedCustomer
     ? classes // show all classes in the dropdown; enrollment will be automatic on check-in
     : [];
@@ -37,12 +37,12 @@ const AttendanceTracker = () => {
     }
 
     const result = clockIn(
-      parseInt(selectedCustomerId),
-      parseInt(selectedClassId)
+      selectedCustomerId,
+      selectedClassId
     );
 
     setMessage(result.success ? result.message : `Error: ${result.error}`);
-    
+
     if (result.success) {
       setSelectedCustomerId('');
       setSelectedClassId('');
@@ -61,7 +61,7 @@ const AttendanceTracker = () => {
     <div className="attendance-tracker-container">
       <div className="tracker-section">
         <h2>Clock In Customer</h2>
-        
+
         {message && (
           <div className={`message ${message.includes('Error') ? 'error' : 'success'}`}>
             {message}
@@ -89,15 +89,16 @@ const AttendanceTracker = () => {
               }}
             >
               <option value="">-- Select Customer --</option>
-              {(searchTerm ? filteredCustomers : customers).map(customer => {
+              {(searchTerm ? filteredCustomers : customers).map((customer, idx) => {
                 const classTotal = customer.classSessions
                   ? Object.values(customer.classSessions).reduce((sum, val) => sum + val, 0)
                   : 0;
                 const dropInTotal = customer.dropInSessions || 0;
                 const legacyTotal = !customer.classSessions ? (customer.remainingSessions || 0) : 0;
                 const totalSessions = classTotal + dropInTotal + legacyTotal;
+                const strCustId = String(customer.id || idx);
                 return (
-                  <option key={customer.id} value={customer.id}>
+                  <option key={strCustId} value={strCustId}>
                     {customer.name} - {customer.phone} ({totalSessions} total sessions)
                   </option>
                 );
@@ -113,11 +114,13 @@ const AttendanceTracker = () => {
               disabled={!selectedCustomerId}
             >
               <option value="">-- Select Class --</option>
-              {enrolledClasses.map(cls => {
-                const sessionsForClass = selectedCustomer?.classSessions?.[cls.id] || 0;
-                const isEnrolled = (selectedCustomer?.enrolledClasses || []).map(Number).includes(cls.id);
+              {enrolledClasses.map((cls, idx) => {
+                const strClsId = String(cls.id || cls.name || idx);
+                const sessionKey = Object.keys(selectedCustomer?.classSessions || {}).find(k => String(k) === strClsId);
+                const sessionsForClass = sessionKey !== undefined ? selectedCustomer.classSessions[sessionKey] : 0;
+                const isEnrolled = (selectedCustomer?.enrolledClasses || []).some(e => String(e) === strClsId);
                 return (
-                  <option key={cls.id} value={cls.id}>
+                  <option key={strClsId} value={strClsId}>
                     {cls.name} - {cls.schedule} ({sessionsForClass} sessions available, -{cls.sessionsPerVisit || 1} per visit){!isEnrolled ? ' — will enroll on first check-in' : ''}
                   </option>
                 );
@@ -133,15 +136,15 @@ const AttendanceTracker = () => {
 
       <div className="tracker-section">
         <h2>Today's Attendance ({todayAttendance.length})</h2>
-        
+
         {todayAttendance.length > 0 ? (
           <div className="attendance-records">
             {todayAttendance.slice().reverse().map((record, idx) => {
               const customer = customers.find(c => c.id === record.customerId);
-              const classInfo = record.classId 
+              const classInfo = record.classId
                 ? classes.find(c => c.id === record.classId)
                 : null;
-              
+
               return (
                 <div key={idx} className="attendance-record card">
                   <div className="record-time">{formatTime(record.timestamp)}</div>

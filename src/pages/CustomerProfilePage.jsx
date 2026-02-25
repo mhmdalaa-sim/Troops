@@ -49,17 +49,18 @@ const CustomerProfilePage = () => {
 
   const enrolledClassDetails = (customer.enrolledClasses || [])
     .map((classIdRaw) => {
-      const classId = parseInt(classIdRaw, 10);
-      const cls = classes.find((c) => c.id === classId);
-      const sessions = customer.classSessions?.[classId] || 0;
+      const strId = String(classIdRaw);
+      const cls = classes.find((c) => String(c.id) === strId);
+      const sessionKey = Object.keys(customer.classSessions || {}).find(k => String(k) === strId);
+      const sessions = sessionKey !== undefined ? customer.classSessions[sessionKey] : 0;
       return cls
         ? {
-            id: classId,
-            name: cls.name,
-            schedule: cls.schedule,
-            sessions,
-            sessionsPerVisit: cls.sessionsPerVisit || 1,
-          }
+          id: classIdRaw,
+          name: cls.name,
+          schedule: cls.schedule,
+          sessions,
+          sessionsPerVisit: cls.sessionsPerVisit || 1,
+        }
         : null;
     })
     .filter(Boolean);
@@ -77,7 +78,7 @@ const CustomerProfilePage = () => {
       return;
     }
 
-    const result = clockIn(customer.id, parseInt(selectedClassId, 10));
+    const result = clockIn(customer.id, selectedClassId);
     setMessage(result.success ? result.message : `Error: ${result.error}`);
 
     if (result.success) {
@@ -293,11 +294,13 @@ const CustomerProfilePage = () => {
                 onChange={(e) => setSelectedClassId(e.target.value)}
               >
                 <option value="">-- Select Class --</option>
-                {classes.map((cls) => {
-                  const sessions = customer.classSessions?.[cls.id] || 0;
-                  const isEnrolled = (customer.enrolledClasses || []).map(Number).includes(cls.id);
+                {classes.map((cls, idx) => {
+                  const strClsId = String(cls.id || cls.name || idx);
+                  const sessionKey = Object.keys(customer.classSessions || {}).find(k => String(k) === strClsId);
+                  const sessions = sessionKey !== undefined ? customer.classSessions[sessionKey] : 0;
+                  const isEnrolled = (customer.enrolledClasses || []).some(e => String(e) === strClsId);
                   return (
-                    <option key={cls.id} value={cls.id}>
+                    <option key={strClsId} value={strClsId}>
                       {cls.name} - {cls.schedule} ({sessions} sessions{isEnrolled ? '' : ', will enroll on first check-in'} — -{cls.sessionsPerVisit || 1} per visit)
                     </option>
                   );
@@ -370,8 +373,8 @@ const CustomerProfilePage = () => {
                 onChange={(e) => setNewSessionClassId(e.target.value)}
               >
                 <option value="">General drop-in (no specific class)</option>
-                {classes.map((cls) => (
-                  <option key={cls.id} value={cls.id}>
+                {classes.map((cls, idx) => (
+                  <option key={String(cls.id || cls.name || idx)} value={cls.id || cls.name}>
                     {cls.name}
                   </option>
                 ))}
